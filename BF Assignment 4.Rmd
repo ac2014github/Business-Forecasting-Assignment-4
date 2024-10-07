@@ -1,0 +1,79 @@
+---
+title: "Assignment 4"
+author: "Adrian Chan"
+date: "2024-10-05"
+output: html_document
+---
+
+```{r}
+library(fpp)
+library(fpp2)
+library(TTR)
+library(readxl)
+library(forecast)
+
+Quarterly_Costco_Sales_2002_to_Present<-read_excel("C:/Users/Adrian/Documents/Business Forecasting/Quarterly Costco Sales 2002 to Present.xlsx")
+
+head(Quarterly_Costco_Sales_2002_to_Present)
+
+sales_ts<-ts(Quarterly_Costco_Sales_2002_to_Present$`Sales (in billions)`,start=c(2002,1),frequency=4)
+
+Quarterly_Costco_Sales_2002_to_Present$'Year and  Quarter' <- paste(Quarterly_Costco_Sales_2002_to_Present$`Fiscal year`,"Q",Quarterly_Costco_Sales_2002_to_Present$Quarter)
+
+plot(sales_ts)
+# This plot goes over the historical sales, in billions. There is evidence of a seasonal trend where each quarter 4 sees a jump in revenues.
+
+acf(sales_ts)
+# This autocorrelation graph shows that the data definitely has a seasonal trend
+
+mean_forecast<-meanf(sales_ts,5)
+plot(mean_forecast)
+# This is the forecast that uses the mean of the data to forecast 5 quarters ahead. 
+
+naive_forecast<-naive(sales_ts,5)
+plot(naive_forecast)
+# This is the naive forecast and shows the forecast of the next 5 quarters using the previous quarter's sales data from Costco.
+
+rwf_forecast<-rwf(sales_ts,5)
+rwf_forecast<-rwf(sales_ts,5, drift=TRUE)
+
+snaive_forecast<-snaive(sales_ts,5)
+
+MA5_forecast<-ma(sales_ts,order=5)
+MA9_forecast<-ma(sales_ts,order=9)
+
+plot(mean_forecast)
+lines(naive_forecast$mean,col="red")
+lines(rwf_forecast$mean,col="green")
+lines(snaive_forecast$mean,col="black")
+lines(MA5_forecast,col="Pink")
+lines(MA9_forecast,col="Blue")
+# This is the chart with the different model forecasts. From this graph, it can be seen that the seasonal naive forecast seems to be the one that is most accurate amongst the forecasts that are shown here, as it accounts for seasonality.
+
+
+HW_forecast<-HoltWinters(sales_ts)
+plot(HW_forecast)
+# This is the Holt-Winters graph that showcases what it would have forecasted in previous quarters. Compared to the other models, this one appears to be the most accurate as it is the one that takes into account the seasonality the most.
+
+HW_model<-HoltWinters(sales_ts)
+HW_forecast<-forecast(HW_model,5)
+plot(HW_forecast)
+# This plot gives the next 5 quarters using the Holt-Winters method. As can be seen from the plot, this method takes into account seasonality and adjusts the forecast based on historical seasonal trends, making it a more accurate model.
+
+SSE_Simple<-HoltWinters(sales_ts,beta=FALSE,gamma=FALSE)
+attributes(SSE_Simple)
+plot(SSE_Simple)
+# This plot gives the Holts-Winters model without any trend or seasonality. As can be seen from this plot, the forecast is not as accurate as when it does take into account both the beta and the gamma.
+
+accuracy(mean_forecast)
+
+accuracy(naive_forecast)
+
+accuracy(rwf_forecast)
+
+accuracy(snaive_forecast)
+
+accuracy(HW_forecast)
+# Using the accuracy measure RMSE, it is clear the the model that fits better with the data is the Holt-Winters method. It has the lowest RMSE, meaning that there are less deviations from the actual values that are being forecasted.
+```
+
